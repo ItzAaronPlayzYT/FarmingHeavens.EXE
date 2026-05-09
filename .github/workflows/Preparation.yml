@@ -1,0 +1,27 @@
+name: Prepare For Build
+on: 
+  workflow_dispatch: 
+  push:
+  pull_request: 
+jobs:
+  Compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v6.4.0
+        with: { node-version: '25' }
+      - run: |
+            #!/bin/bash
+            # PNPM Installing
+            npm i pnpm -g
+            # Auto-detect all .ts files (ignores node_modules & dist)
+            FILES=$(find . -name "*.ts" -not -path "./dist/*" -not -path "./node_modules/*" 2>/dev/null)
+            if [ -z "$FILES" ]; then
+              echo "No .ts files found. You sure you didn't forget to save?"
+              exit 1
+            fi
+            echo "Compiling TypeScript files..."
+            for file in $FILES; do
+            echo "   → $file"
+            pnpm dlx tsc "$file" --outDir ./dist --noEmitOnError false --skipLibCheck 2>/dev/null
+            done
+            echo "Done. Check ./dist/ for .js output."
